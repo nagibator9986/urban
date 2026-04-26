@@ -17,10 +17,21 @@ import type {
 } from "../types";
 
 // Base URL: in dev, Vite proxy serves /api → localhost:8000.
-// In prod (Render), set VITE_API_URL to the backend's public URL (e.g.
-// https://aqyl-api.onrender.com). The /api/v1 segment is always appended.
-const ENV_BASE = import.meta.env?.VITE_API_URL?.replace(/\/+$/, "") ?? "";
-const BASE_URL = ENV_BASE ? `${ENV_BASE}/api/v1` : "/api/v1";
+// In prod (Render), set VITE_API_URL to the backend's public URL.
+// Render's `fromService.property: host` returns a bare hostname (without scheme),
+// so we explicitly prefix https:// when missing.
+function buildBaseUrl(): string {
+  const raw = (import.meta.env?.VITE_API_URL ?? "").trim().replace(/\/+$/, "");
+  if (!raw) return "/api/v1";
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  return `${withScheme}/api/v1`;
+}
+
+const BASE_URL = buildBaseUrl();
+if (import.meta.env?.DEV || typeof window !== "undefined" && (window as any).__AQYL_DEBUG_API__) {
+  // eslint-disable-next-line no-console
+  console.info("[aqyl] API base URL:", BASE_URL);
+}
 
 const api = axios.create({ baseURL: BASE_URL, timeout: 20000 });
 
@@ -34,9 +45,22 @@ export function isApiError(e: unknown): e is ApiError {
   return e instanceof Error && "status" in (e as object);
 }
 
-// Single place to normalize errors — callers get a concise message and status.
+// Reject HTML responses — happens when VITE_API_URL is misconfigured and
+// requests hit the SPA's own _redirects fallback returning index.html.
 api.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    const ct = (r.headers?.["content-type"] || "").toString().toLowerCase();
+    if (ct.includes("text/html")) {
+      const err: ApiError = Object.assign(
+        new Error("API returned HTML — VITE_API_URL likely misconfigured"),
+        { status: r.status, code: "BAD_BASE_URL", detail: "html_response" },
+      );
+      // eslint-disable-next-line no-console
+      console.error("[aqyl-api] HTML response — check VITE_API_URL. Got:", r.config?.baseURL);
+      return Promise.reject(err);
+    }
+    return r;
+  },
   (e: AxiosError<{ detail?: string; error?: string; message?: string }>) => {
     const status = e.response?.status;
     const data = e.response?.data;

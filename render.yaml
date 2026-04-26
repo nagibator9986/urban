@@ -63,7 +63,9 @@ services:
     pullRequestPreviewsEnabled: false
     envVars:
       - key: VITE_API_URL
-        # Backend public URL — Render auto-fills via the linked service.
+        # Backend public hostname — Render fills via linked service.
+        # `property: host` returns a bare hostname (no scheme); the frontend
+        # code in services/api.ts auto-prepends https:// when missing.
         fromService:
           type: web
           name: aqyl-api

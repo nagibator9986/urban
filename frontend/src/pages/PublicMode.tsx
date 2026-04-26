@@ -141,7 +141,7 @@ export default function PublicMode() {
   }, [batchType, selectedForBatch]);
 
   const applyBatchPreset = useCallback((preset: "worst3" | "best3" | "all" | "populated3" | "clear") => {
-    if (!stats) return;
+    if (!stats || !Array.isArray(stats.districts)) return;
     const districts = stats.districts;
     let ids: number[] = [];
     if (preset === "worst3") {
@@ -254,7 +254,7 @@ export default function PublicMode() {
   }, [additions]);
 
   const districtCards = useMemo(() => {
-    if (!stats) return [];
+    if (!stats || !Array.isArray(stats.districts)) return [];
     // slice() first — stats.districts is referentially shared React state; .sort() mutates.
     return stats.districts
       .slice()
