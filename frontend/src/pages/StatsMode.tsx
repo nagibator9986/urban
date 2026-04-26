@@ -142,12 +142,28 @@ export default function StatsMode() {
 function PublicStats({ stats, selectedId, onSelect, openReport }: {
   stats: CityStatDetail; selectedId: number | null; onSelect: (n: number | null) => void; openReport: () => void;
 }) {
-  const districtData = selectedId ? stats.districts.find((d) => d.district_id === selectedId) ?? null : null;
-  const current = districtData ? districtData.facilities : stats.facilities;
-  const population = districtData ? districtData.population : stats.total_population;
-  const score = districtData ? districtData.overall_score : stats.overall_score;
+  const safeDistricts = Array.isArray(stats?.districts) ? stats.districts : [];
+  const safeFacilities = Array.isArray(stats?.facilities) ? stats.facilities : [];
+  const districtData = selectedId
+    ? safeDistricts.find((d) => d.district_id === selectedId) ?? null
+    : null;
+  const current = districtData ? (districtData.facilities ?? []) : safeFacilities;
+  const population = districtData ? districtData.population : (stats?.total_population ?? 0);
+  const score = districtData ? districtData.overall_score : (stats?.overall_score ?? 0);
   const name = districtData ? districtData.district_name : "Весь город Алматы";
   const normStats = current.filter((f) => f.norm_per_10k > 0);
+
+  if (safeDistricts.length === 0) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>📊</div>
+        <div style={{ fontWeight: 700 }}>Нет данных в БД</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+          Запустите collectors локально (см. DEPLOY.md шаг 6) чтобы наполнить базу.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -172,7 +188,7 @@ function PublicStats({ stats, selectedId, onSelect, openReport }: {
             <button className={`chip ${!selectedId ? "active" : ""}`} onClick={() => onSelect(null)}>
               Весь город
             </button>
-            {stats.districts.slice().sort((a, b) => b.population - a.population).map((d) => (
+            {safeDistricts.slice().sort((a, b) => b.population - a.population).map((d) => (
               <button key={d.district_id}
                       className={`chip ${selectedId === d.district_id ? "active" : ""}`}
                       onClick={() => onSelect(d.district_id)}>
@@ -261,7 +277,7 @@ function PublicStats({ stats, selectedId, onSelect, openReport }: {
         <div className="chart-card">
           <h3>Сравнение районов по общей оценке</h3>
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={stats.districts
+            <BarChart data={safeDistricts
               .slice()
               .sort((a, b) => b.overall_score - a.overall_score)
               .map((d) => ({ name: d.district_name.replace(" район", ""), score: d.overall_score }))}>
@@ -270,7 +286,7 @@ function PublicStats({ stats, selectedId, onSelect, openReport }: {
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--muted)" }} />
               <Tooltip contentStyle={{ background: "#18212F", border: "1px solid #334155", borderRadius: 8 }} />
               <Bar dataKey="score" radius={[4, 4, 0, 0]}>
-                {stats.districts.map((d, i) => (<Cell key={i} fill={gradeColor(d.overall_score)} />))}
+                {safeDistricts.map((d, i) => (<Cell key={i} fill={gradeColor(d.overall_score)} />))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -352,7 +368,22 @@ function FacilityStatCard({ stat }: { stat: FacilityStatDetail }) {
 // =================== BUSINESS ===================
 
 function BusinessStats({ biz, openReport }: { biz: BusinessSummary; openReport: () => void }) {
-  const topCats = biz.top_categories.slice(0, 8);
+  const safeDistricts = Array.isArray(biz?.districts) ? biz.districts : [];
+  const safeTopCats = Array.isArray(biz?.top_categories) ? biz.top_categories : [];
+  const topCats = safeTopCats.slice(0, 8);
+
+  if (safeDistricts.length === 0 && safeTopCats.length === 0) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>💼</div>
+        <div style={{ fontWeight: 700 }}>Нет данных в БД</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+          Запустите collectors локально (см. DEPLOY.md шаг 6) чтобы наполнить базу.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="stats-hero">
@@ -361,10 +392,10 @@ function BusinessStats({ biz, openReport }: { biz: BusinessSummary; openReport: 
             Всего бизнесов в базе
           </div>
           <div className="hero-score">
-            <span className="big">{biz.total_businesses.toLocaleString("ru-RU")}</span>
+            <span className="big">{(biz?.total_businesses ?? 0).toLocaleString("ru-RU")}</span>
           </div>
           <div style={{ fontSize: 13, color: "var(--muted)" }}>
-            В {biz.districts.filter((d) => d.total_businesses > 0).length} районах · {biz.top_categories.length} категорий
+            В {safeDistricts.filter((d) => d.total_businesses > 0).length} районах · {safeTopCats.length} категорий
           </div>
           <div style={{ marginTop: 18 }}>
             <button className="btn primary" onClick={openReport}>
@@ -395,7 +426,7 @@ function BusinessStats({ biz, openReport }: { biz: BusinessSummary; openReport: 
       <div className="chart-card">
         <h3>Плотность бизнеса по районам (на 10К жителей)</h3>
         <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={biz.districts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.businesses_per_10k }))}>
+          <BarChart data={safeDistricts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.businesses_per_10k }))}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
             <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--muted)" }} />
             <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} />
@@ -412,7 +443,7 @@ function BusinessStats({ biz, openReport }: { biz: BusinessSummary; openReport: 
             <tr><th>Район</th><th>Население</th><th>Бизнесов</th><th>На 10К</th></tr>
           </thead>
           <tbody>
-            {biz.districts.map((d) => (
+            {safeDistricts.map((d) => (
               <tr key={d.district_name}>
                 <td style={{ fontWeight: 700 }}>{d.district_name}</td>
                 <td>{d.population.toLocaleString("ru-RU")}</td>
@@ -430,6 +461,21 @@ function BusinessStats({ biz, openReport }: { biz: BusinessSummary; openReport: 
 // =================== ECO ===================
 
 function EcoStats({ eco, openReport }: { eco: CityEco; openReport: () => void }) {
+  const ecoDistricts = Array.isArray(eco?.districts) ? eco.districts : [];
+  const ecoRanking = Array.isArray(eco?.ranking) ? eco.ranking : [];
+
+  if (ecoDistricts.length === 0) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
+        <div style={{ fontWeight: 700 }}>Нет экологических данных</div>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
+          Запустите collectors локально (см. DEPLOY.md шаг 6) чтобы наполнить базу.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="stats-hero">
@@ -454,13 +500,13 @@ function EcoStats({ eco, openReport }: { eco: CityEco; openReport: () => void })
         <div className="chart-card">
           <h3>AQI по районам</h3>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={eco.districts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.aqi, color: d.aqi_category.color }))}>
+            <BarChart data={ecoDistricts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.aqi, color: d.aqi_category.color }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--muted)" }} />
               <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} />
               <Tooltip contentStyle={{ background: "#18212F", border: "1px solid #334155", borderRadius: 8 }} />
               <Bar dataKey="v" radius={[4, 4, 0, 0]}>
-                {eco.districts.map((d, i) => (<Cell key={i} fill={d.aqi_category.color} />))}
+                {ecoDistricts.map((d, i) => (<Cell key={i} fill={d.aqi_category.color} />))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -471,13 +517,13 @@ function EcoStats({ eco, openReport }: { eco: CityEco; openReport: () => void })
         <div className="chart-card">
           <h3>Озеленение (м²/чел)</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={eco.districts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.green_m2_per_capita }))} layout="vertical">
+            <BarChart data={ecoDistricts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.green_m2_per_capita }))} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
               <XAxis type="number" domain={[0, 20]} tick={{ fontSize: 10, fill: "var(--muted)" }} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "var(--muted)" }} width={100} />
               <Tooltip contentStyle={{ background: "#18212F", border: "1px solid #334155", borderRadius: 8 }} />
               <Bar dataKey="v" radius={[0, 3, 3, 0]}>
-                {eco.districts.map((d, i) => (<Cell key={i} fill={d.green_m2_per_capita >= 16 ? "#10B981" : d.green_m2_per_capita >= 8 ? "#F59E0B" : "#EF4444"} />))}
+                {ecoDistricts.map((d, i) => (<Cell key={i} fill={d.green_m2_per_capita >= 16 ? "#10B981" : d.green_m2_per_capita >= 8 ? "#F59E0B" : "#EF4444"} />))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -485,7 +531,7 @@ function EcoStats({ eco, openReport }: { eco: CityEco; openReport: () => void })
         <div className="chart-card">
           <h3>Автотранспорт (на 1К жит.)</h3>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={eco.districts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.traffic_per_1000 }))}>
+            <BarChart data={ecoDistricts.map((d) => ({ name: d.district_name.replace(" район", ""), v: d.traffic_per_1000 }))}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--muted)" }} />
               <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} />
@@ -503,11 +549,11 @@ function EcoStats({ eco, openReport }: { eco: CityEco; openReport: () => void })
             <tr><th>#</th><th>Район</th><th>AQI</th><th>Эко-оценка</th><th>Грейд</th></tr>
           </thead>
           <tbody>
-            {eco.ranking.map((r, i) => (
+            {ecoRanking.map((r, i) => (
               <tr key={r.district_name}>
                 <td>{i + 1}</td>
                 <td style={{ fontWeight: 700 }}>{r.district_name}</td>
-                <td style={{ color: eco.districts.find((d) => d.district_name === r.district_name)?.aqi_category.color, fontWeight: 700 }}>{r.aqi}</td>
+                <td style={{ color: ecoDistricts.find((d) => d.district_name === r.district_name)?.aqi_category.color, fontWeight: 700 }}>{r.aqi}</td>
                 <td>{r.eco_score}</td>
                 <td><span className="tag" style={{ background: gradeColor(r.eco_score) + "22", color: gradeColor(r.eco_score) }}>{r.eco_grade}</span></td>
               </tr>

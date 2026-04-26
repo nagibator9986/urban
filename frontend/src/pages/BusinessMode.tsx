@@ -172,12 +172,12 @@ export default function BusinessMode() {
               <div className="stats-grid">
                 <div className="stat">
                   <span className="stat-label">Всего</span>
-                  <span className="stat-value brand">{summary.total_businesses.toLocaleString("ru-RU")}</span>
+                  <span className="stat-value brand">{(summary.total_businesses ?? 0).toLocaleString("ru-RU")}</span>
                   <span className="stat-unit">объектов</span>
                 </div>
                 <div className="stat">
                   <span className="stat-label">Районов</span>
-                  <span className="stat-value">{summary.districts.filter((d) => d.total_businesses > 0).length}</span>
+                  <span className="stat-value">{(summary.districts ?? []).filter((d) => d.total_businesses > 0).length}</span>
                   <span className="stat-unit">активных</span>
                 </div>
               </div>
@@ -221,7 +221,9 @@ export default function BusinessMode() {
                     <div className="stat">
                       <span className="stat-label">Среднее</span>
                       <span className="stat-value">
-                        {summary ? (geo.features.length / summary.districts.length).toFixed(1) : "—"}
+                        {summary && summary.districts && summary.districts.length > 0
+                          ? (geo.features.length / summary.districts.length).toFixed(1)
+                          : "—"}
                       </span>
                       <span className="stat-unit">на район</span>
                     </div>
