@@ -24,7 +24,19 @@ router = APIRouter(prefix="/public")
 
 @router.get("/fifteen-min")
 def fifteen_min_endpoint(db: Session = Depends(get_db)):
-    return fifteen_min_city(db)
+    import logging
+    log = logging.getLogger(__name__)
+    try:
+        return fifteen_min_city(db)
+    except Exception as e:
+        log.exception("/public/fifteen-min failed: %s", e)
+        return {
+            "city_avg_score": 0,
+            "districts": [],
+            "methodology": "",
+            "generated_at": "",
+            "error": f"db_unavailable: {e.__class__.__name__}",
+        }
 
 
 class CompareRequest(BaseModel):

@@ -158,7 +158,9 @@ def _project_population(
         "age_6_18": c["age_6_18"],
         "age_18_65": c["age_18_65"],
         "age_65": c["age_65"],
-        "dependency_ratio": round((c["age_0_6"] + c["age_6_18"] + c["age_65"]) / c["age_18_65"] * 100, 1),
+        "dependency_ratio": round(
+            (c["age_0_6"] + c["age_6_18"] + c["age_65"]) / max(1, c["age_18_65"]) * 100, 1,
+        ),
     }]
 
     for step in range(1, scenario.horizon_years + 1):
@@ -288,11 +290,11 @@ def _project_eco(
     population_history: list[dict], scenario: FuturesScenario,
 ) -> list[dict]:
     """Прогноз AQI и озеленения с учётом политики."""
-    start_pop = population_history[0]["population"]
+    start_pop = max(1, population_history[0]["population"])
     series = []
 
     for idx, pop_row in enumerate(population_history):
-        pop_ratio = pop_row["population"] / start_pop
+        pop_ratio = max(0.001, pop_row["population"] / start_pop)
 
         # Газификация — линейное достижение target к концу горизонта
         t = idx / max(1, scenario.horizon_years)
@@ -343,20 +345,24 @@ def _project_business(
 ) -> list[dict]:
     """Прогноз бизнес-ландшафта."""
     from app.models.business import Business
-    current_total = db.query(Business).count()
-    start_pop = population_history[0]["population"]
+    try:
+        current_total = db.query(Business).count()
+    except Exception:
+        current_total = 0
+    # If DB has no businesses yet, use a baseline density (45K — current Almaty estimate)
+    if current_total <= 0:
+        current_total = 45_000
+    start_pop = max(1, population_history[0]["population"])
 
     # Density baseline: бизнесов на 10К жителей
-    base_density = current_total / start_pop * 10_000 if start_pop else 0
+    base_density = current_total / start_pop * 10_000
 
     series = []
     for idx, pop_row in enumerate(population_history):
-        pop = pop_row["population"]
+        pop = max(1, pop_row["population"])
         income_index = (1 + scenario.income_growth_per_year) ** idx
 
-        # Рынок расширяется по: население × (1 + income growth × 0.6)
         market_capacity = pop * (base_density / 10_000) * (1 + (income_index - 1) * 0.6)
-        # Реальный прирост бизнесов 3.5%/год baseline
         biz_growth_rate = 0.035 + (scenario.income_growth_per_year - 0.05) * 0.5
         estimated_businesses = int(current_total * (1 + biz_growth_rate) ** idx)
         market_gap = max(0, int(market_capacity - estimated_businesses))
@@ -565,10 +571,18 @@ def _current_total_population(db: Session) -> int:
     return int(row or 0)
 
 
+ALMATY_FALLBACK_POPULATION = 2_350_000  # 2024 estimate, used when DB is empty
+
+
 def run_forecast(db: Session, scenario: FuturesScenario) -> dict:
     """Запуск полного прогноза по всем режимам."""
-    # 1. Текущее население
-    total_pop = _current_total_population(db)
+    # 1. Текущее население — с fallback на baseline если БД ещё не заполнена
+    try:
+        total_pop = _current_total_population(db)
+    except Exception:
+        total_pop = 0
+    if total_pop <= 0:
+        total_pop = ALMATY_FALLBACK_POPULATION
 
     # 2. Прогнозы
     population = _project_population(total_pop, scenario)
@@ -624,7 +638,7 @@ def run_forecast(db: Session, scenario: FuturesScenario) -> dict:
             "infra_delta": round(last_infra - infrastructure[0]["infra_score"], 1),
             "eco_delta": round(last_eco - eco[0]["eco_score"], 1),
             "population_growth_percent": round(
-                (population[-1]["population"] / population[0]["population"] - 1) * 100, 1,
+                (population[-1]["population"] / max(1, population[0]["population"]) - 1) * 100, 1,
             ),
         },
         "generated_at": datetime.utcnow().isoformat() + "Z",

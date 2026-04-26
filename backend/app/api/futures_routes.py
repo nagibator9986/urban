@@ -64,15 +64,27 @@ def params_meta():
 @router.post("/forecast")
 def forecast(req: ScenarioModel, db: Session = Depends(get_db)):
     """Прогноз по сценарию."""
+    import logging
+    log = logging.getLogger(__name__)
     scenario = FuturesScenario(**req.model_dump())
-    return run_forecast(db, scenario)
+    try:
+        return run_forecast(db, scenario)
+    except Exception as e:
+        log.exception("/futures/forecast failed: %s", e)
+        raise HTTPException(503, f"forecast_failed: {e.__class__.__name__}")
 
 
 @router.post("/analyze")
 def analyze(req: ScenarioModel, db: Session = Depends(get_db)):
     """Прогноз + AI-меморандум."""
+    import logging
+    log = logging.getLogger(__name__)
     scenario = FuturesScenario(**req.model_dump())
-    forecast_data = run_forecast(db, scenario)
+    try:
+        forecast_data = run_forecast(db, scenario)
+    except Exception as e:
+        log.exception("/futures/analyze failed: %s", e)
+        raise HTTPException(503, f"forecast_failed: {e.__class__.__name__}")
     ai = get_analysis(forecast_data)
     return {**forecast_data, "ai_analysis": ai}
 

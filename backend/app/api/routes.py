@@ -1,4 +1,10 @@
-"""API routes for Almaty Urban Analytics."""
+"""API routes for Almaty Urban Analytics.
+
+All endpoints are defensive: if DB is empty/unreachable they return
+empty-but-valid shapes instead of 500. Frontend already handles empty data.
+"""
+
+import logging
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
@@ -15,18 +21,24 @@ from app.services.analytics import get_city_overview, get_district_analytics
 from app.services.statistics import get_city_statistics
 from app.services.norms import NORMS
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
 @router.get("/districts/geojson")
 def districts_geojson(db: Session = Depends(get_db)):
-    """Polygon-GeoJSON всех районов + множество метрик для choropleth-слоя.
+    """Polygon-GeoJSON всех районов + метрики для choropleth-слоя.
 
-    Возвращает в каждой feature.properties:
-      overall_score, population, area_km2 — базовые
-      и метрики (если БД позволяет): aqi, eco_score, green_m2_per_capita,
-      traffic_per_1000, businesses_per_10k, fifteen_min_score
+    Defensive: empty FeatureCollection on any DB-side failure.
     """
+    try:
+        return _build_districts_geojson(db)
+    except Exception as e:
+        logger.exception("/districts/geojson failed: %s", e)
+        return {"type": "FeatureCollection", "features": []}
+
+
+def _build_districts_geojson(db: Session) -> dict:
     from app.services.statistics import get_city_statistics
     from app.services.eco_analytics import (
         DISTRICT_BASELINE_AQI, GREEN_INDEX, TRAFFIC_INDEX, _district_aqi,
@@ -128,7 +140,11 @@ def districts_geojson(db: Session = Depends(get_db)):
 @router.get("/districts", response_model=list[DistrictOut])
 def list_districts(db: Session = Depends(get_db)):
     """Get all Almaty districts with population (latest year)."""
-    districts = db.query(District).order_by(District.id).all()
+    try:
+        districts = db.query(District).order_by(District.id).all()
+    except Exception as e:
+        logger.exception("/districts query failed: %s", e)
+        return []
     if not districts:
         return []
 
@@ -176,12 +192,16 @@ def list_facilities(
     db: Session = Depends(get_db),
 ):
     """Get facilities with optional filters."""
-    query = db.query(Facility)
-    if facility_type:
-        query = query.filter(Facility.facility_type == facility_type)
-    if district_id:
-        query = query.filter(Facility.district_id == district_id)
-    return query.limit(limit).all()
+    try:
+        query = db.query(Facility)
+        if facility_type:
+            query = query.filter(Facility.facility_type == facility_type)
+        if district_id:
+            query = query.filter(Facility.district_id == district_id)
+        return query.limit(limit).all()
+    except Exception as e:
+        logger.exception("/facilities query failed: %s", e)
+        return []
 
 
 @router.get("/facilities/geojson")
@@ -192,13 +212,16 @@ def facilities_geojson(
     db: Session = Depends(get_db),
 ):
     """Get facilities as GeoJSON FeatureCollection."""
-    query = db.query(Facility)
-    if facility_type:
-        query = query.filter(Facility.facility_type == facility_type)
-    if district_id:
-        query = query.filter(Facility.district_id == district_id)
-
-    facilities = query.limit(limit).all()
+    try:
+        query = db.query(Facility)
+        if facility_type:
+            query = query.filter(Facility.facility_type == facility_type)
+        if district_id:
+            query = query.filter(Facility.district_id == district_id)
+        facilities = query.limit(limit).all()
+    except Exception as e:
+        logger.exception("/facilities/geojson query failed: %s", e)
+        return {"type": "FeatureCollection", "features": []}
 
     features = []
     for f in facilities:
@@ -224,33 +247,51 @@ def facilities_geojson(
 @router.get("/analytics/districts", response_model=list[DistrictAnalytics])
 def district_analytics(db: Session = Depends(get_db)):
     """Per-district infrastructure analytics."""
-    return get_district_analytics(db)
+    try:
+        return get_district_analytics(db)
+    except Exception as e:
+        logger.exception("/analytics/districts failed: %s", e)
+        return []
 
 
 @router.get("/analytics/overview", response_model=CityOverview)
 def city_overview(db: Session = Depends(get_db)):
     """Full city overview with coverage gaps."""
-    return get_city_overview(db)
+    try:
+        return get_city_overview(db)
+    except Exception as e:
+        logger.exception("/analytics/overview failed: %s", e)
+        return CityOverview(total_population=0, districts=[], coverage_gaps=[])
 
 
 @router.get("/analytics/facility-types")
 def facility_type_counts(db: Session = Depends(get_db)):
     """Count of facilities by type (single aggregate query)."""
-    rows = (
-        db.query(Facility.facility_type, func.count(Facility.id))
-        .group_by(Facility.facility_type)
-        .all()
-    )
     counts = {ft.value: 0 for ft in FacilityType}
-    for ftype, cnt in rows:
-        counts[ftype.value] = cnt
+    try:
+        rows = (
+            db.query(Facility.facility_type, func.count(Facility.id))
+            .group_by(Facility.facility_type)
+            .all()
+        )
+        for ftype, cnt in rows:
+            counts[ftype.value] = cnt
+    except Exception as e:
+        logger.exception("/analytics/facility-types failed: %s", e)
     return counts
 
 
 @router.get("/statistics", response_model=CityStatDetail)
 def city_statistics(db: Session = Depends(get_db)):
     """Detailed city statistics with norms comparison."""
-    return get_city_statistics(db)
+    try:
+        return get_city_statistics(db)
+    except Exception as e:
+        logger.exception("/statistics failed: %s", e)
+        return CityStatDetail(
+            total_population=0, total_facilities=0, overall_score=0,
+            facilities=[], districts=[],
+        )
 
 
 @router.get("/statistics/norms")
