@@ -3,7 +3,7 @@
 # Stack:
 #   1. PostgreSQL (free, with PostGIS extension auto-created at backend startup)
 #   2. Backend FastAPI (Python, Docker)
-#   3. Frontend (static React/Vite SPA)
+#   3. Frontend (static React/Vite SPA — no plan needed; static sites are free)
 #
 # Usage:
 #   1) Push this repo to GitHub.
@@ -13,7 +13,7 @@
 #
 # Notes:
 #   - Free Postgres on Render expires after 90 days; consider upgrading or
-#     migrating to Neon (also free + bessrochno) before that.
+#     migrating to Neon (also free + бессрочно) before that.
 #   - Free Web Service sleeps after 15 min idle (~30 sec cold start).
 #     Setup UptimeRobot ping on /health to keep it warm.
 
@@ -25,7 +25,7 @@ databases:
     postgresMajorVersion: "16"
 
 services:
-  # ----- BACKEND ------------------------------------------------------
+  # ----- BACKEND (FastAPI in Docker) ----------------------------------
   - type: web
     name: aqyl-api
     runtime: docker
@@ -40,11 +40,11 @@ services:
           name: aqyl-postgres
           property: connectionString
       - key: CORS_ORIGINS
-        # Will be set after first deploy to actual frontend URL.
-        # Default placeholder; fix in Dashboard → aqyl-api → Environment.
+        # Will be set to actual frontend URL after first deploy.
+        # Manually adjust in Dashboard → aqyl-api → Environment if needed.
         value: https://aqyl-web.onrender.com,http://localhost:5173
       - key: OPENAI_API_KEY
-        sync: false           # set manually in dashboard
+        sync: false             # set manually in dashboard
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: EGOV_API_KEY
@@ -52,22 +52,22 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
 
-  # ----- FRONTEND -----------------------------------------------------
+  # ----- FRONTEND (static SPA) ----------------------------------------
+  # Note: static sites do NOT accept a `plan` field — they are always free.
   - type: web
     name: aqyl-web
     runtime: static
-    plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
     envVars:
       - key: VITE_API_URL
-        # Backend public URL. Render auto-fills via fromService below.
+        # Backend public URL — Render auto-fills via the linked service.
         fromService:
           type: web
           name: aqyl-api
-          property: host        # → aqyl-api.onrender.com
-        # If `host` doesn't auto-prefix https://, set manually after deploy.
+          property: host          # → aqyl-api-xxx.onrender.com
     routes:
       - type: rewrite
         source: /*
