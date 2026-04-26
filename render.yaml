@@ -23,6 +23,7 @@ databases:
     databaseName: almaty_analytics
     user: aqyl
     postgresMajorVersion: "16"
+    region: frankfurt           # MUST match backend region for internal DNS
 
 services:
   # ----- BACKEND (FastAPI in Docker) ----------------------------------

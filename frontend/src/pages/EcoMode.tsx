@@ -121,14 +121,33 @@ export default function EcoMode() {
     </AppShell>
   );
 
-  const primary = selected ?? {
-    ...eco.districts[0],
+  // Defensive: eco.districts may be empty array if DB hasn't been seeded yet.
+  const firstDistrict = eco.districts && eco.districts[0];
+  if (!firstDistrict) {
+    return (
+      <AppShell
+        topTitle="Экология Алматы"
+        topSub="Нет данных в БД — заполните через collectors"
+      >
+        <div className="loading" style={{ textAlign: "center", padding: 60 }}>
+          <div style={{ fontSize: 48, marginBottom: 12 }}>🌫</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>Экологические данные пока пусты</div>
+          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 8 }}>
+            Запустите backend collectors чтобы наполнить БД (см. DEPLOY.md шаг 6).
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  const primary = selected ?? ({
+    ...firstDistrict,
     district_name: "Весь город Алматы",
     aqi: eco.city_aqi,
     aqi_category: eco.city_aqi_category,
     green_m2_per_capita: eco.city_green_m2_per_capita,
     eco_score: eco.city_eco_score,
-    pollutants: eco.districts[0].pollutants,
+    pollutants: firstDistrict.pollutants,
     issues: eco.top_issues.map((i) => ({ ...i })),
     traffic_per_1000: 420,
     green_deficit_percent: Math.max(0, 100 - eco.city_green_m2_per_capita / 16 * 100),
@@ -136,7 +155,7 @@ export default function EcoMode() {
     green_norm: 16,
     population: eco.total_population,
     updated_at: eco.updated_at,
-  } as DistrictEco;
+  } as DistrictEco);
 
   return (
     <AppShell
