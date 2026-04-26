@@ -119,18 +119,48 @@ def best_locations_grid_endpoint(
 
 @router.get("/summary")
 def business_summary(db: Session = Depends(get_db)):
-    """Overall business landscape summary."""
-    total = db.query(Business).count()
-    counts = get_business_counts(db)
-    districts = get_business_by_district(db)
+    """Overall business landscape summary.
 
-    # Top categories
+    Resilient to empty DB and to any single-step failure: never 500s, returns
+    zeros + warnings instead. This endpoint is hit on every BusinessMode page
+    load — it must not break the SPA.
+    """
+    import logging
+    log = logging.getLogger(__name__)
+
+    try:
+        total = db.query(Business).count()
+    except Exception as e:
+        log.exception("business_summary: count failed")
+        return {
+            "total_businesses": 0,
+            "top_categories": [],
+            "districts": [],
+            "error": f"db_unavailable: {e.__class__.__name__}",
+        }
+
+    try:
+        counts = get_business_counts(db)
+    except Exception as e:
+        log.exception("business_summary: get_business_counts failed")
+        counts = {}
+
+    try:
+        districts = get_business_by_district(db)
+    except Exception as e:
+        log.exception("business_summary: get_business_by_district failed")
+        districts = []
+
     top_cats = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:10]
 
     return {
         "total_businesses": total,
         "top_categories": [
-            {"category": cat, "label": CATEGORY_LABELS.get(BusinessCategory(cat), cat), "count": cnt}
+            {
+                "category": cat,
+                "label": CATEGORY_LABELS.get(BusinessCategory(cat), cat),
+                "count": cnt,
+            }
             for cat, cnt in top_cats if cnt > 0
         ],
         "districts": districts,
