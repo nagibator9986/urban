@@ -62,16 +62,23 @@ OSM_BUSINESS_QUERIES: list[tuple[str, BusinessCategory]] = [
 
 
 def _overpass_request(query: str) -> dict:
+    headers = {
+        "User-Agent": "AQYL-CITY/1.0 (urban analytics; contact: dev@aqyl.city)",
+        "Accept": "application/json",
+    }
     for attempt in range(MAX_RETRIES):
         try:
             response = httpx.post(
-                OVERPASS_URL, data={"data": query}, timeout=120,
+                OVERPASS_URL, data={"data": query}, headers=headers, timeout=120,
             )
             if response.status_code == 429 or response.status_code >= 500:
                 wait = RETRY_DELAY * (attempt + 1)
                 logger.warning(f"Overpass {response.status_code}, retry in {wait}s...")
                 time.sleep(wait)
                 continue
+            if response.status_code == 406:
+                logger.error("Overpass 406. Body: %s", response.text[:300])
+                response.raise_for_status()
             response.raise_for_status()
             return response.json()
         except httpx.TimeoutException:

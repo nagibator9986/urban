@@ -41,12 +41,20 @@ def _build_query(osm_filter: str) -> str:
 
 
 def _overpass_request(query: str) -> dict:
-    """Make Overpass API request with retries."""
+    """Make Overpass API request with retries.
+
+    Sends explicit User-Agent (Overpass blocks default httpx UA with 406).
+    """
+    headers = {
+        "User-Agent": "AQYL-CITY/1.0 (urban analytics; contact: dev@aqyl.city)",
+        "Accept": "application/json",
+    }
     for attempt in range(MAX_RETRIES):
         try:
             response = httpx.post(
                 OVERPASS_URL,
                 data={"data": query},
+                headers=headers,
                 timeout=120,
             )
             if response.status_code == 429 or response.status_code >= 500:
@@ -54,6 +62,10 @@ def _overpass_request(query: str) -> dict:
                 logger.warning(f"Overpass {response.status_code}, retry in {wait}s...")
                 time.sleep(wait)
                 continue
+            if response.status_code == 406:
+                # Bad Accept or UA — log body for debug
+                logger.error("Overpass 406. Body: %s", response.text[:300])
+                response.raise_for_status()
             response.raise_for_status()
             return response.json()
         except httpx.TimeoutException:
@@ -129,7 +141,7 @@ def collect_district_boundaries(db: Session) -> int:
     [out:json][timeout:120];
     area[name="Алматы"]->.a;
     relation["admin_level"="6"](area.a);
-    out body geom;
+    out tags;
     """
     data = _overpass_request(query)
 
