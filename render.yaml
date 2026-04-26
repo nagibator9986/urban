@@ -63,13 +63,15 @@ services:
     pullRequestPreviewsEnabled: false
     envVars:
       - key: VITE_API_URL
-        # Backend public hostname — Render fills via linked service.
-        # `property: host` returns a bare hostname (no scheme); the frontend
-        # code in services/api.ts auto-prepends https:// when missing.
-        fromService:
-          type: web
-          name: aqyl-api
-          property: host          # → aqyl-api-xxx.onrender.com
+        # ⚠️ MUST be set manually after first deploy.
+        # Render's `fromService.host` returns INTERNAL DNS name (e.g. `aqyl-api`),
+        # not the public URL — that breaks the SPA fetch.
+        # After first deploy:
+        #   1) Open `aqyl-api` service → copy the public URL from the top
+        #      (e.g. https://aqyl-api-abc123.onrender.com)
+        #   2) Open `aqyl-web` → Environment → set VITE_API_URL to that URL
+        #   3) Save → frontend auto-rebuilds in 2-3 min
+        sync: false
     routes:
       - type: rewrite
         source: /*
