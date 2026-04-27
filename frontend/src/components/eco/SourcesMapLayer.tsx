@@ -17,11 +17,12 @@ export default function SourcesMapLayer({ visibleKeys }: Props) {
   }, []);
 
   if (!data) return null;
+  const features = data.features ?? [];
 
   return (
     <>
-      {data.features
-        .filter((f) => visibleKeys.has(f.properties.source_key))
+      {features
+        .filter((f) => f?.properties && visibleKeys.has(f.properties.source_key))
         .map((f, i) => {
           const [lon, lat] = f.geometry.coordinates;
           const color = f.properties.color;
@@ -67,8 +68,8 @@ export function SourcesLegend({ data, visibleKeys, onToggle }: {
         Источник: {data.source}. Включите нужные слои:
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
-        {data.categories.map((c) => {
-          const cnt = data.by_category_count[c.key] ?? 0;
+        {(data.categories ?? []).map((c) => {
+          const cnt = data.by_category_count?.[c.key] ?? 0;
           const on = visibleKeys.has(c.key);
           return (
             <button

@@ -899,10 +899,10 @@ export interface SourcesMapResponse {
   generated_at: string;
   source: string;
   total_features: number;
-  by_category_count: Record<string, number>;
-  categories: SourcesMapCategory[];
-  features: SourcesMapFeature[];
-  district_exposure: { district: string; counts: Record<string, number>; total_intensity: number }[];
+  by_category_count?: Record<string, number>;
+  categories?: SourcesMapCategory[];
+  features?: SourcesMapFeature[];
+  district_exposure?: { district: string; counts: Record<string, number>; total_intensity: number }[];
   methodology: string;
   error?: string;
   warning?: string;

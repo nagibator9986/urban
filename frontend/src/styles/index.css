@@ -487,6 +487,18 @@ a { color: var(--brand-1); text-decoration: none; }
 .map-overlay.bl { bottom: 20px; left: 16px; }
 .map-overlay.bc { bottom: 20px; left: 50%; transform: translateX(-50%); }
 
+/* Re-enable pointer events for interactive controls inside overlays.
+   The wrapper has pointer-events:none so the map drags through empty space,
+   but buttons/chips inside need to be tappable. */
+.map-overlay button,
+.map-overlay .pill-btn,
+.map-overlay .btn,
+.map-overlay .chip,
+.map-overlay .metric-chooser,
+.map-overlay .metric-chip {
+  pointer-events: auto;
+}
+
 .map-toast {
   pointer-events: auto;
   background: var(--elevated);
