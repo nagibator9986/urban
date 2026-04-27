@@ -124,6 +124,8 @@ export default function BusinessMode() {
     <AppShell
       topTitle="Бизнес-аналитика"
       topSub="Карта · AI-рекомендер · анализ территории · каннибализация · часы-ниши"
+      aiOpen={aiOpen}
+      onToggleAI={() => setAiOpen((o) => !o)}
       topActions={
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {([

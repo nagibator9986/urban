@@ -278,6 +278,8 @@ export default function PublicMode() {
     <AppShell
       topTitle="Общественная инфраструктура"
       topSub="Карта + drag-and-drop симулятор + AI-помощник"
+      aiOpen={aiOpen}
+      onToggleAI={() => setAiOpen((o) => !o)}
       topActions={
         <>
           {totalAdds > 0 && (
@@ -347,8 +349,8 @@ export default function PublicMode() {
           {stats && (
             <div className="card">
               <div className="card-title">Общий показатель города</div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-                <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: "-0.03em" }}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: "clamp(32px, 8vw, 42px)", fontWeight: 800, letterSpacing: "-0.03em" }}
                       className="stat-value brand">{stats.overall_score}</span>
                 <span style={{ color: "var(--muted)", fontWeight: 600 }}>/ 100</span>
               </div>

@@ -133,3 +133,8 @@ export const IconWand = (p: P) => (
     <path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M15 9h0M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5" />
   </svg>
 );
+export const IconMenu = (p: P) => (
+  <svg {...base(p.size)} className={p.className}>
+    <path d="M3 6h18M3 12h18M3 18h18" />
+  </svg>
+);

@@ -115,7 +115,7 @@ export default function AIAssistant({ mode, open, onClose, suggestions }: Props)
   };
 
   return (
-    <aside className={`ai-dock ${open ? "" : "collapsed"}`}>
+    <aside className={`ai-dock ${open ? "is-open" : "collapsed"}`}>
       <div className="ai-head">
         <div className="ai-head-l">
           <div className="ai-avatar"><IconBot size={18} /></div>

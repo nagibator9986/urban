@@ -63,7 +63,7 @@ export default function FuturesConstructor({
   }, [scenario]);
 
   return (
-    <aside className="panel" style={{ width: 420 }}>
+    <aside className="panel panel-wide">
       <div className="panel-head">
         <h2>Конструктор сценария</h2>
         <p>

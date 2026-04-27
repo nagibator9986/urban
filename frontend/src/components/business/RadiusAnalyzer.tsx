@@ -50,7 +50,7 @@ export function RadiusAnalyzerPanel({
             min={0.3} max={3.0} step={0.1}
             value={radius}
             onChange={(e) => onRadiusChange(Number(e.target.value))}
-            style={{ marginLeft: 8, verticalAlign: "middle", width: 150 }}
+            style={{ marginLeft: 8, verticalAlign: "middle", maxWidth: 150, width: "100%", flex: 1 }}
           />
         </label>
         <button className="btn ghost sm" onClick={onReset}>
@@ -264,7 +264,7 @@ export function TwoPointPanel({
         Радиус: <strong style={{ color: "var(--brand-1)" }}>{radius.toFixed(1)} км</strong>
         <input type="range" min={0.3} max={3.0} step={0.1}
                value={radius} onChange={(e) => setRadius(Number(e.target.value))}
-               style={{ marginLeft: 8, verticalAlign: "middle", width: 130 }} />
+               style={{ marginLeft: 8, verticalAlign: "middle", maxWidth: 130, width: "100%" }} />
       </label>
 
       {categoryFilter && (
@@ -276,8 +276,8 @@ export function TwoPointPanel({
       {loading && <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 8 }}>Считаем…</div>}
 
       {(dataA || dataB) && (
-        <div style={{ marginTop: 12 }}>
-          <table style={{ width: "100%", fontSize: 12 }}>
+        <div className="table-scroll" style={{ marginTop: 12 }}>
+          <table style={{ width: "100%", fontSize: 12, minWidth: 280 }}>
             <thead>
               <tr style={{ color: "var(--muted)" }}>
                 <th style={{ textAlign: "left", padding: "4px 0" }}></th>

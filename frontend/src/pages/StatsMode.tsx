@@ -103,6 +103,7 @@ export default function StatsMode() {
     <AppShell
       topTitle="Статистика города"
       topSub={`Все три режима в одном дашборде · ${new Date().toLocaleDateString("ru-RU")}`}
+      hasPanel={false}
       topActions={
         <div style={{ display: "flex", gap: 6 }}>
           <button className="pill-btn" onClick={() => exportCurrentTab(tab, stats, biz, eco)}>

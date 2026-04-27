@@ -157,7 +157,8 @@ export default function AutoPlanModal({
             {data.capex_estimate.lines.length > 0 && (
               <div className="card">
                 <div className="card-title">💰 Оценка CAPEX</div>
-                <table style={{ width: "100%", fontSize: 12, marginTop: 8 }}>
+                <div className="table-scroll" style={{ marginTop: 8 }}>
+                <table style={{ width: "100%", fontSize: 12, minWidth: 480 }}>
                   <thead>
                     <tr style={{ color: "var(--muted)" }}>
                       <th style={{ textAlign: "left", padding: "4px 0" }}>Объект</th>
@@ -186,6 +187,7 @@ export default function AutoPlanModal({
                     </tr>
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
 

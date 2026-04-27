@@ -161,6 +161,8 @@ export default function EcoMode() {
     <AppShell
       topTitle="Экология города"
       topSub={`AQI ${eco.city_aqi} · ${eco.city_aqi_category.label} · обновлено ${new Date(eco.updated_at).toLocaleTimeString("ru-RU")}`}
+      aiOpen={aiOpen}
+      onToggleAI={() => setAiOpen((o) => !o)}
       topActions={
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {([

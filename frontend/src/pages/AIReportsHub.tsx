@@ -29,6 +29,7 @@ export default function AIReportsHub() {
     <AppShell
       topTitle="AI-отчёты AQYL"
       topSub="Автоматические аналитические сводки по всем режимам. Просмотр в окне + экспорт в Markdown."
+      hasPanel={false}
     >
       <div className="stats-page">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(340px,1fr))", gap: 16 }}>

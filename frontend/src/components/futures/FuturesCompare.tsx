@@ -203,7 +203,8 @@ function CompareManyResult({
       {Object.keys(data.deltas_vs_base).length > 0 && (
         <div className="card">
           <div className="card-title">Δ vs {labels[0]} (базовый)</div>
-          <table style={{ width: "100%", marginTop: 8, fontSize: 12 }}>
+          <div className="table-scroll" style={{ marginTop: 8 }}>
+          <table style={{ width: "100%", fontSize: 12, minWidth: 480 }}>
             <thead>
               <tr style={{ color: "var(--muted)" }}>
                 <th style={{ textAlign: "left" }}>Сценарий</th>
@@ -237,6 +238,7 @@ function CompareManyResult({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

@@ -125,7 +125,8 @@ export default function CannibalSimModal({
             {data.competitors.length > 0 && (
               <div className="card">
                 <div className="card-title">📉 У кого отниму клиентов</div>
-                <table style={{ width: "100%", fontSize: 12, marginTop: 8, borderCollapse: "collapse" }}>
+                <div className="table-scroll" style={{ marginTop: 8 }}>
+                <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", minWidth: 320 }}>
                   <thead>
                     <tr style={{ color: "var(--muted)" }}>
                       <th style={{ textAlign: "left", padding: "4px 0" }}>Заведение</th>
@@ -145,6 +146,7 @@ export default function CannibalSimModal({
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             )}
 

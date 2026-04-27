@@ -214,7 +214,7 @@ export default function FuturesPage() {
         aiLoading={aiLoading}
       />
 
-      <div style={{ flex: 1, overflow: "auto", padding: "24px 28px" }}>{tabBody}</div>
+      <div className="futures-tab-body">{tabBody}</div>
     </AppShell>
   );
 }

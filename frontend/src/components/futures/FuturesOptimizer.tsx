@@ -141,7 +141,7 @@ export default function FuturesOptimizer({ scenario, onApplyBest }: Props) {
               step={4}
               value={iterations}
               onChange={(e) => setIterations(Number(e.target.value))}
-              style={{ marginLeft: 8, verticalAlign: "middle", width: 140 }}
+              style={{ marginLeft: 8, verticalAlign: "middle", maxWidth: 140, width: "100%" }}
             />
           </label>
           <button
@@ -300,7 +300,8 @@ function ParamDiff({
     return <div style={{ fontSize: 12, color: "var(--muted)" }}>Параметры совпадают с базовым сценарием.</div>;
   }
   return (
-    <table style={{ width: "100%", fontSize: 12, marginTop: 8, borderCollapse: "collapse" }}>
+    <div className="table-scroll" style={{ marginTop: 8 }}>
+    <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse", minWidth: 320 }}>
       <thead>
         <tr style={{ color: "var(--muted)" }}>
           <th style={{ textAlign: "left", padding: "4px 0" }}>Параметр</th>
@@ -318,6 +319,7 @@ function ParamDiff({
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

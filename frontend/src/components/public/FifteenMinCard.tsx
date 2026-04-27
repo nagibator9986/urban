@@ -23,8 +23,8 @@ export default function FifteenMinCard() {
         (школа, сад, поликлиника, аптека, парк, остановка)
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
-        <span style={{ fontSize: 36, fontWeight: 800, letterSpacing: "-0.03em" }}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+        <span style={{ fontSize: "clamp(28px, 7vw, 36px)", fontWeight: 800, letterSpacing: "-0.03em" }}
               className="stat-value brand">
           {data.city_avg_score}
         </span>
