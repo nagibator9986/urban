@@ -63,7 +63,11 @@ export default function BusinessMode() {
   const [loading, setLoading] = useState(false);
   const gridData = useBestLocationsGrid(showGrid && selected ? selected : null);
 
-  const [aiOpen, setAiOpen] = useState(true);
+  // Open AI by default on desktop only — on mobile the bottom-sheet would
+  // cover the map immediately on every route change.
+  const [aiOpen, setAiOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 901px)").matches
+  );
   const [reportOpen, setReportOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [cannibalOpen, setCannibalOpen] = useState(false);

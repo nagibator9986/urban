@@ -72,7 +72,11 @@ type EcoTab = "map" | "sources" | "inversion" | "cities" | "windows";
 export default function EcoMode() {
   const [eco, setEco] = useState<CityEco | null>(null);
   const [selectedName, setSelectedName] = useState<string | null>(null);
-  const [aiOpen, setAiOpen] = useState(true);
+  // Open AI by default on desktop only — on mobile the bottom-sheet would
+  // cover the map immediately on every route change.
+  const [aiOpen, setAiOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 901px)").matches
+  );
   const [reportOpen, setReportOpen] = useState(false);
   const [briefOpen, setBriefOpen] = useState(false);
   const [riskOpen, setRiskOpen] = useState(false);

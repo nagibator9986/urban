@@ -1218,29 +1218,36 @@ textarea.input { min-height: 60px; }
 
 @media (max-width: 900px) {
   .metric-chooser {
-    /* On mobile: icon-only grid to save space */
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 3px;
-    padding: 5px;
-    max-width: 168px;
+    /* On mobile: 4-column icon-grid to save space */
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 6px;
+    max-width: 158px;
   }
   .metric-chooser-title {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
     font-size: 9px;
     padding: 0 2px 2px;
   }
   .metric-chip {
-    padding: 5px 6px !important;
-    min-width: 28px;
-    min-height: 28px;
+    padding: 5px 4px !important;
+    min-width: 30px;
+    min-height: 30px;
     justify-content: center !important;
+    border-radius: 8px !important;
   }
   .metric-label { display: none; }
+  .metric-chip.active {
+    /* Active chip spans across so label fits */
+    grid-column: span 2;
+    justify-content: center !important;
+  }
   .metric-chip.active .metric-label {
     display: inline;
-    font-size: 9.5px;
-    margin-left: 3px;
+    font-size: 10px;
+    margin-left: 4px;
+    font-weight: 700;
   }
 }
 
@@ -1424,6 +1431,9 @@ textarea.input { min-height: 60px; }
     white-space: nowrap;
     flex-shrink: 0;
   }
+  /* Tighter pill/cta sizing inside the actions strip — saves ~10px row height */
+  .topbar-actions .pill-btn { padding: 7px 12px; font-size: 11.5px; }
+  .topbar-actions .cta-gradient { padding: 8px 13px; font-size: 12px; }
 
   /* legacy topbar-right (in case used elsewhere) */
   .topbar-right { gap: 6px; }
@@ -1542,26 +1552,36 @@ textarea.input { min-height: 60px; }
   .ai-stream { padding: 14px; gap: 10px; }
   .ai-compose { padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 
-  /* Map overlays adjust — leave room for topbar (~110px) and bottom nav */
+  /* Map overlays — TL/TR sized so they don't collide. TR is wide enough
+     for the metric chooser icon-grid; TL takes the remaining left space.
+     Default-hint toast is hidden on mobile (instructions ref desktop sidebar
+     which doesn't apply to the drawer UX). */
   .map-overlay.tl {
     top: 8px;
     left: 8px;
     right: auto;
-    max-width: calc(100vw - 110px);
+    max-width: 45vw;
   }
   .map-overlay.tr {
     top: 8px;
     right: 8px;
     max-width: 50vw;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 240px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
-  .map-overlay.bl { bottom: 8px; left: 8px; max-width: calc(60vw); }
-  .map-overlay.bc { bottom: 8px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); }
+  .map-toast.hint-default { display: none; }
+
+  .map-overlay.bl { bottom: 8px; left: 8px; max-width: 60vw; }
+  .map-overlay.bc {
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100vw - 32px);
+  }
   .map-toast {
     font-size: 11.5px;
-    padding: 6px 10px;
+    padding: 7px 11px;
     line-height: 1.4;
     max-width: 100%;
   }

@@ -55,7 +55,11 @@ export default function PublicMode() {
   const [sims, setSims] = useState<Record<number, SimulationResult>>({});
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  const [aiOpen, setAiOpen] = useState(true);
+  // Open AI by default on desktop only — on mobile the bottom-sheet would
+  // cover the map immediately on every route change.
+  const [aiOpen, setAiOpen] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(min-width: 901px)").matches
+  );
   const [reportOpen, setReportOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [devOpen, setDevOpen] = useState(false);
@@ -670,13 +674,13 @@ export default function PublicMode() {
           <FacilityLayers activeLayers={activeLayers} />
         </BaseMap>
         <div className="map-overlay tl">
-          <div className="map-toast">
+          <div className={`map-toast ${!draggingType && !batchMode ? "hint-default" : ""}`}>
             {draggingType ? (
-              <><strong>Перетаскиваете:</strong> {FACILITY_EMOJI[draggingType]} {FACILITY_LABELS[draggingType]} → бросьте на район слева</>
+              <><strong>Перетаскиваете:</strong> {FACILITY_EMOJI[draggingType]} {FACILITY_LABELS[draggingType]} → бросьте на район</>
             ) : batchMode ? (
-              <>🧮 <strong>Batch-режим:</strong> кликайте районы на карте/слева чтобы выбрать, потом добавьте тип в сайдбаре</>
+              <>🧮 <strong>Batch-режим:</strong> кликайте районы на карте, потом добавьте тип в меню</>
             ) : (
-              <>💡 Возьмите иконку слева и бросьте на район — оценка пересчитается в реальном времени</>
+              <>💡 Возьмите иконку из меню (☰) и бросьте на район — оценка пересчитается в реальном времени</>
             )}
           </div>
         </div>
