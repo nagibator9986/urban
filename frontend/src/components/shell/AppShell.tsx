@@ -118,13 +118,13 @@ export default function AppShell({
                 {panelOpen ? <IconClose size={20} /> : <IconMenu size={20} />}
               </button>
             )}
-            <div style={{ minWidth: 0 }}>
+            <div className="topbar-titlebox">
               <div className="topbar-title">{topTitle}</div>
               {topSub && <div className="topbar-sub">{topSub}</div>}
             </div>
           </div>
-          <div className="topbar-right">
-            {topActions}
+          {topActions && <div className="topbar-actions">{topActions}</div>}
+          <div className="topbar-controls">
             <button
               onClick={() => setProfileOpen(true)}
               className={`pill-btn ${profile.display_name || profile.home_district ? "primary" : ""}`}

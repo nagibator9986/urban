@@ -689,26 +689,17 @@ export default function PublicMode() {
             🗺 Choropleth {showChoropleth ? "ON" : "OFF"}
           </button>
           {showChoropleth && (
-            <div style={{
-              display: "flex", flexDirection: "column", gap: 4,
-              padding: 6, borderRadius: 8,
-              background: "rgba(15,23,42,0.85)",
-              border: "1px solid var(--border)",
-              backdropFilter: "blur(8px)",
-              maxWidth: 200,
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)",
-                            letterSpacing: 0.6, textTransform: "uppercase", padding: "0 4px" }}>
-                Метрика
-              </div>
+            <div className="metric-chooser">
+              <div className="metric-chooser-title">Метрика</div>
               {CHOROPLETH_METRICS.map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setChoroplethMetric(m.key)}
-                  className={`chip ${choroplethMetric === m.key ? "active" : ""}`}
-                  style={{ fontSize: 10, padding: "3px 8px", justifyContent: "flex-start" }}
+                  className={`chip metric-chip ${choroplethMetric === m.key ? "active" : ""}`}
+                  title={m.label}
                 >
-                  {m.emoji} {m.label}
+                  <span className="metric-emoji">{m.emoji}</span>
+                  <span className="metric-label">{m.label}</span>
                 </button>
               ))}
             </div>

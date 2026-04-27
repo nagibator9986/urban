@@ -173,21 +173,67 @@ a { color: var(--brand-1); text-decoration: none; }
 }
 
 .topbar {
-  height: 56px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, auto) 1fr auto;
+  grid-template-areas: "left actions controls";
+  gap: 14px;
   align-items: center;
-  justify-content: space-between;
   padding: 0 22px;
+  height: 56px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-alt);
   flex-shrink: 0;
   z-index: 9;
 }
 
-.topbar-left { display: flex; align-items: center; gap: 14px; }
-.topbar-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
-.topbar-sub { font-size: 12px; color: var(--muted); }
+.topbar-left { grid-area: left; display: flex; align-items: center; gap: 14px; min-width: 0; }
+.topbar-titlebox { min-width: 0; }
+.topbar-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-sub {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
+.topbar-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+}
+.topbar-actions::-webkit-scrollbar { display: none; }
+.topbar-actions > * { flex-shrink: 0; }
+.topbar-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+.topbar-controls {
+  grid-area: controls;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Backwards-compat alias */
 .topbar-right { display: flex; align-items: center; gap: 10px; }
 
 .pill-btn {
@@ -1142,6 +1188,62 @@ textarea.input { min-height: 60px; }
   -webkit-overflow-scrolling: touch;
 }
 
+/* Choropleth metric chooser — top-right map overlay */
+.metric-chooser {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(15,23,42,0.85);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  max-width: 200px;
+}
+.metric-chooser-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+.metric-chip {
+  font-size: 10px !important;
+  padding: 3px 8px !important;
+  justify-content: flex-start !important;
+}
+.metric-emoji { font-size: 12px; }
+
+@media (max-width: 900px) {
+  .metric-chooser {
+    /* On mobile: icon-only grid to save space */
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 5px;
+    max-width: 168px;
+  }
+  .metric-chooser-title {
+    flex-basis: 100%;
+    font-size: 9px;
+    padding: 0 2px 2px;
+  }
+  .metric-chip {
+    padding: 5px 6px !important;
+    min-width: 28px;
+    min-height: 28px;
+    justify-content: center !important;
+  }
+  .metric-label { display: none; }
+  .metric-chip.active .metric-label {
+    display: inline;
+    font-size: 9.5px;
+    margin-left: 3px;
+  }
+}
+
 @media (max-width: 900px) {
   .futures-tab-body { padding: 14px 14px 80px; }
 }
@@ -1172,9 +1274,14 @@ textarea.input { min-height: 60px; }
   box-shadow: var(--glow);
 }
 
-/* Drawer overlay/backdrop used to close panel/AI on mobile */
+/* Drawer overlay/backdrop used to close panel/AI on mobile.
+   Starts below the topbar row-1 so the hamburger close button stays tappable. */
 .drawer-backdrop {
-  position: fixed; inset: 0;
+  position: fixed;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(5, 10, 20, 0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -1272,11 +1379,53 @@ textarea.input { min-height: 60px; }
   }
   .rail { display: none; }
 
-  /* Topbar — make space for hamburger + condense */
-  .topbar { padding: 0 12px; height: 52px; gap: 8px; }
-  .topbar-left { gap: 8px; min-width: 0; flex: 1; }
+  /* Topbar — 2-row layout on mobile: row 1 (left + controls), row 2 (actions strip).
+     Higher z-index on mobile so hamburger stays clickable above drawers. */
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left controls"
+      "actions actions";
+    height: auto;
+    min-height: 52px;
+    padding: 0;
+    gap: 0;
+    row-gap: 0;
+    z-index: 50;
+    position: relative;
+  }
+  .topbar-left {
+    padding: 0 12px;
+    height: 52px;
+    gap: 8px;
+  }
+  .topbar-controls {
+    padding-right: 10px;
+    height: 52px;
+  }
   .topbar-title { font-size: 13.5px; line-height: 1.2; }
   .topbar-sub { font-size: 10.5px; }
+
+  .topbar-actions {
+    padding: 6px 12px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-alt);
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+  }
+  .topbar-actions > div {
+    flex-wrap: nowrap !important;
+  }
+  .topbar-actions .pill-btn,
+  .topbar-actions .cta-gradient,
+  .topbar-actions .btn,
+  .topbar-actions .chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* legacy topbar-right (in case used elsewhere) */
   .topbar-right { gap: 6px; }
 
   /* Mobile-only / desktop-only toggles */
@@ -1290,13 +1439,16 @@ textarea.input { min-height: 60px; }
   .work { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
   .work-body { min-height: 0; }
 
-  /* Side panel becomes off-canvas drawer (left). Hidden by default. */
+  /* Side panel becomes off-canvas drawer (left). Hidden by default.
+     Starts below row-1 of topbar (52px) so the hamburger toggle stays tappable. */
   .panel {
     position: fixed;
-    top: 0; left: 0; bottom: 0;
+    top: 52px;
+    left: 0;
+    bottom: 0;
     width: min(86vw, 380px);
     max-width: 100vw;
-    height: 100%;
+    height: calc(100% - 52px);
     z-index: 40;
     transform: translateX(-100%);
     transition: transform .28s cubic-bezier(.4,0,.2,1);
@@ -1390,27 +1542,57 @@ textarea.input { min-height: 60px; }
   .ai-stream { padding: 14px; gap: 10px; }
   .ai-compose { padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 
-  /* Map overlays adjust */
-  .map-overlay.tl { top: 8px; left: 8px; right: 8px; max-width: calc(100vw - 16px); }
-  .map-overlay.tr { top: 8px; right: 8px; }
-  .map-overlay.bl { bottom: 8px; left: 8px; }
-  .map-overlay.bc { bottom: 8px; }
-  .map-toast { font-size: 12px; padding: 6px 10px; max-width: calc(100vw - 24px); }
-  .map-legend { padding: 8px 10px; font-size: 11px; }
+  /* Map overlays adjust — leave room for topbar (~110px) and bottom nav */
+  .map-overlay.tl {
+    top: 8px;
+    left: 8px;
+    right: auto;
+    max-width: calc(100vw - 110px);
+  }
+  .map-overlay.tr {
+    top: 8px;
+    right: 8px;
+    max-width: 50vw;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .map-overlay.bl { bottom: 8px; left: 8px; max-width: calc(60vw); }
+  .map-overlay.bc { bottom: 8px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px); }
+  .map-toast {
+    font-size: 11.5px;
+    padding: 6px 10px;
+    line-height: 1.4;
+    max-width: 100%;
+  }
+  .map-legend {
+    padding: 6px 10px;
+    font-size: 10.5px;
+    gap: 4px;
+    max-width: 100%;
+  }
+  .map-legend .row { white-space: nowrap; }
+
+  /* Leaflet zoom buttons — compact for touch */
+  .leaflet-control-zoom { margin: 8px !important; }
+  .leaflet-control-zoom a {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    font-size: 16px !important;
+  }
+  .leaflet-control-attribution {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
+    max-width: 60vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   /* Pill buttons compact on mobile */
   .pill-btn { padding: 7px 11px; font-size: 11.5px; }
 
-  /* Topbar right scrolls if it overflows */
-  .topbar-right {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    flex-wrap: nowrap;
-    max-width: calc(100vw - 120px);
-  }
-  .topbar-right::-webkit-scrollbar { display: none; }
-  .topbar-right .pill-btn { flex-shrink: 0; }
 }
 
 /* =====================================================================
@@ -1420,8 +1602,9 @@ textarea.input { min-height: 60px; }
 @media (max-width: 600px) {
   .topbar-title { font-size: 13px; }
   .topbar-sub { display: none; }
-  .topbar-right { gap: 4px; }
-  .topbar-right .pill-btn { padding: 6px 9px; font-size: 11px; }
+  .topbar-actions { padding: 5px 10px; gap: 5px; }
+  .topbar-actions .pill-btn { padding: 6px 10px; font-size: 11px; }
+  .topbar-actions .cta-gradient { padding: 6px 12px; font-size: 11.5px; }
 
   .palette { grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .palette-item { padding: 8px 4px; }
